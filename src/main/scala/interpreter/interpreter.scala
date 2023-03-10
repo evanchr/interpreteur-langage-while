@@ -123,7 +123,19 @@ object Interpreter {
    * @return la mémoire après l'interprétation de command
    */
   // TODO TP2
-  def interpreterCommand(command: Command, memory: Memory): Memory = ???
+  def interpreterCommand(command: Command, memory: Memory): Memory = {
+    command match {
+      case Nop => memory
+      case Set(v,e) => assign(v,interpreterExpr(e, memory), memory)
+      case While(cond,body) => 
+        interpreterExpr(cond, memory) match {
+          case NlValue => memory
+          case _ => interpreterCommands(body, memory)
+        }
+      case For(count,body) => ???
+      case If(cond,then_cmd,else_cmd) => ???
+    }
+  }
   
   
   /**
@@ -132,7 +144,13 @@ object Interpreter {
    * @return la mémoire après l'interprétation de la liste de commandes
    */
   // TODO TP2
-  def interpreterCommands(commands: List[Command], memory: Memory): Memory = ???
+  def interpreterCommands(commands: List[Command], memory: Memory): Memory = {
+    commands match {
+      case Nil => memory
+      case hd :: Nil => interpreterCommand(hd, memory)
+      case hd :: tl => interpreterCommand(hd, memory) ++ interpreterCommands(tl, memory)
+    }
+  }
   
 
   /**
