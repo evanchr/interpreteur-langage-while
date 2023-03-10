@@ -41,8 +41,12 @@ object Interpreter {
    * @return m(v), c'est-à-dire la valeur de la variable v dans la mémoire mem,
    * la valeur par défaut si la variable v n'est pas présente dans la mémoire mem
    */
-  // TODO TP2
-  def lookUp(v: Variable, mem: Memory): Value = ???
+  def lookUp(v: Variable, mem: Memory): Value = {
+    mem match {
+      case Nil => NlValue
+      case (Var(name1),valu) :: tl => v match { case Var(name2) => if (name1 == name2) valu else lookUp(v, tl) }
+    }
+  }
 
   /**
    * @param v : une variable
@@ -50,8 +54,16 @@ object Interpreter {
    * @param mem : une mémoire
    * @return la mémoire modifiée par l'affectation [v->d]
    */
-  // TODO TP2
-  def assign(v: Variable, d: Value, mem: Memory): Memory = ???
+  def assign(v: Variable, d: Value, mem: Memory): Memory = {
+    mem match {
+      case Nil => List((v,d))
+      case (Var(name1),valu) :: tl =>
+        v match {
+          case Var(name2) => if (name1 == name2) { (v,d) :: tl }
+                             else { (Var(name1),valu) :: assign(v,d,tl) }
+        } 
+    } 
+  }
 
   /**
    *  TRAITEMENT DES EXPRESSIONS DU LANGAGE WHILE
@@ -61,8 +73,27 @@ object Interpreter {
    * @param expression : un AST décrivant une expression du langage WHILE
    * @return la valeur de l'expression
    */
-  // TODO TP2
-  def interpreterExpr(expression: Expression, mem: Memory): Value = ???
+  def interpreterExpr(expression: Expression, mem: Memory): Value = {
+    expression match {
+      case Nl => NlValue
+      case Cst(name) => CstValue(name)
+      case VarExp(name) => val v: Variable = Var(name) ; lookUp(v,mem)
+      case Cons(arg1,arg2) => ConsValue(interpreterExpr(arg1,mem), interpreterExpr(arg2, mem))
+      case Hd(arg) => 
+        interpreterExpr(arg, mem) match {
+          case ConsValue(head, _) => head
+          case _ => NlValue
+        }
+      case Tl(arg) => 
+        interpreterExpr(arg, mem) match {
+          case ConsValue(_, tail) => tail
+          case _ => NlValue
+        }
+      case Eq(arg1,arg2) =>
+        if (interpreterExpr(arg1, mem) != interpreterExpr(arg2, mem)) NlValue
+        else ConsValue(NlValue,NlValue)
+    }
+  }
 
   /**
    * la fonction interpreterExpr ci-dessus calcule la valeur associée à une expression
@@ -72,8 +103,13 @@ object Interpreter {
    * @param value : une valeur du langage WHILE
    * @return l'AST décrivant l'expression de cette valeur
    */
-  // TODO TP2
-  def valueToExpression(value: Value): Expression = ???
+  def valueToExpression(value: Value): Expression = {
+    value match {
+      case NlValue => Nl
+      case CstValue(name) => Cst(name)
+      case ConsValue(arg1, arg2) => Cons(valueToExpression(arg1),valueToExpression(arg2))
+    }
+  }
   
 
   /**
