@@ -2,3 +2,5 @@
 .metals/metals.log
 .vscode/settings.json
 .metals/metals.mv.db
+project/metals.sbt
+project/project/metals.sbt
