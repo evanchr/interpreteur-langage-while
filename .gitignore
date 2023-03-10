@@ -4,3 +4,20 @@
 .metals/metals.mv.db
 project/metals.sbt
 project/project/metals.sbt
+.bloop
+# bloop, metals and vscode
+.bloop
+.vscode
+.bsp
+.json
+.log
+.db
+.metals
+project/metals.sbt
+# sbt
+target/
+project/target/
+project/project/
+.metals/metals.log
+.metals/metals.mv.db
+project/build.properties
