@@ -187,8 +187,13 @@ object Interpreter {
    * @param memory : une mémoire
    * @return la liste des valeurs des variables de sortie
    */
-  // TODO TP2
-  def interpreterMemoryGet(vars: List[Variable], memory: Memory): List[Value] = ???
+  def interpreterMemoryGet(vars: List[Variable], memory: Memory): List[Value] = {
+    vars match {
+      case Nil => throw ExceptionListeVide
+      case head :: Nil => lookUp(head, memory) :: Nil
+      case head :: next => lookUp(head, memory) :: interpreterMemoryGet(next, memory)
+    }
+  }
 
   /**
    * @param program : un AST décrivant un programme du langage WHILE
