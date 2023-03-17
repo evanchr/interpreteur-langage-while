@@ -21,8 +21,6 @@ case object ExceptionListesDeLongueursDifferentes extends Exception
 
 object Interpreter {
 
-  // TODO commenter
-
   /**
    * UN INTERPRETER POUR LE LANGAGE WHILE
    *
@@ -200,41 +198,13 @@ object Interpreter {
    * @param vals : une liste de valeurs
    * @return la liste des valeurs des variables de sortie
    */
-  // TODO TP2
-  def interpreter(program: Program, vals: List[Value]): List[Value] = ???
-  
-  def main(args: Array[String]): Unit = {
-    val memory1: Memory = List(
-      (Var("X"), ConsValue(NlValue, ConsValue(NlValue, NlValue))))
-    val expected: Memory = List(
-      (
-        Var("X"),
-        ConsValue(
-          NlValue,
-          ConsValue(
-            NlValue,
-            ConsValue(
-              NlValue,
-              ConsValue(
-                NlValue,
-                ConsValue(
-                  NlValue,
-                  ConsValue(
-                    NlValue,
-                    ConsValue(
-                      NlValue,
-                      ConsValue(NlValue, NlValue))))))))))
-    val result =
-      interpreterCommand(
-        For(
-          VarExp("X"),
-          List(
-            For(
-              VarExp("X"),
-              List(
-                Set(Var("X"), Cons(Nl, VarExp("X"))))))),
-        memory1)
-    println(result)
+  def interpreter(program: Program, vals: List[Value]): List[Value] = {
+    program match {
+      case Progr(in, body, out) => 
+        var mem = interpreterMemorySet(in,vals)
+        mem = interpreterCommands(body, mem)
+        interpreterMemoryGet(out,mem)
+    }
   }
   
 
