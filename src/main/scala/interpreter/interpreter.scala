@@ -21,6 +21,8 @@ case object ExceptionListesDeLongueursDifferentes extends Exception
 
 object Interpreter {
 
+  // TODO commenter
+
   /**
    * UN INTERPRETER POUR LE LANGAGE WHILE
    *
@@ -130,10 +132,19 @@ object Interpreter {
       case While(cond,body) => 
         interpreterExpr(cond, memory) match {
           case NlValue => memory
-          case _ => interpreterCommands(body, memory)
+          case _ => interpreterCommand(While(cond,body), interpreterCommands(body, memory))
         }
-      case For(count,body) => ???
-      case If(cond,then_cmd,else_cmd) => ???
+      case For(count,body) => 
+        interpreterExpr(count, memory) match {
+          case NlValue => memory
+          case valu => interpreterCommand(For(Tl(valueToExpression(valu)),body), interpreterCommands(body, memory))
+        }
+      case If(cond,then_cmd,else_cmd) => {
+        interpreterExpr(cond, memory) match {
+          case NlValue => interpreterCommands(else_cmd, memory)
+          case _ => interpreterCommands(then_cmd, memory)
+        }
+      }
     }
   }
   
@@ -143,12 +154,12 @@ object Interpreter {
    * @param memory : une mémoire
    * @return la mémoire après l'interprétation de la liste de commandes
    */
-  // TODO TP2
+  // TODO TP2 
   def interpreterCommands(commands: List[Command], memory: Memory): Memory = {
     commands match {
-      case Nil => memory
+      case Nil => throw ExceptionListeVide
       case hd :: Nil => interpreterCommand(hd, memory)
-      case hd :: tl => interpreterCommand(hd, memory) ++ interpreterCommands(tl, memory)
+      case hd :: tl => interpreterCommands(tl, interpreterCommand(hd, memory))
     }
   }
   
@@ -183,7 +194,39 @@ object Interpreter {
   // TODO TP2
   def interpreter(program: Program, vals: List[Value]): List[Value] = ???
   
-  
+  def main(args: Array[String]): Unit = {
+    val memory1: Memory = List(
+      (Var("X"), ConsValue(NlValue, ConsValue(NlValue, NlValue))))
+    val expected: Memory = List(
+      (
+        Var("X"),
+        ConsValue(
+          NlValue,
+          ConsValue(
+            NlValue,
+            ConsValue(
+              NlValue,
+              ConsValue(
+                NlValue,
+                ConsValue(
+                  NlValue,
+                  ConsValue(
+                    NlValue,
+                    ConsValue(
+                      NlValue,
+                      ConsValue(NlValue, NlValue))))))))))
+    val result =
+      interpreterCommand(
+        For(
+          VarExp("X"),
+          List(
+            For(
+              VarExp("X"),
+              List(
+                Set(Var("X"), Cons(Nl, VarExp("X"))))))),
+        memory1)
+    println(result)
+  }
   
 
   /**
