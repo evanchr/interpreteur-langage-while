@@ -172,8 +172,14 @@ object Interpreter {
    * @param vals : une liste non vide de valeurs
    * @return une mémoire associant chaque valeur à la variable d'entrée correspondant
    */
-  // TODO TP2
-  def interpreterMemorySet(vars: List[Variable], vals: List[Value]): Memory = ???
+  def interpreterMemorySet(vars: List[Variable], vals: List[Value]): Memory = {
+    (vars,vals) match {
+      case (Nil,Nil) => throw ExceptionListeVide
+      case (_,Nil) | (Nil,_) => throw ExceptionListesDeLongueursDifferentes
+      case (hd::Nil,hd2::Nil) => (hd,hd2) :: Nil
+      case (hd::tl,hd2::tl2) => (hd,hd2) :: interpreterMemorySet(tl,tl2)  
+    }
+  }
   
 
   /**
