@@ -124,7 +124,6 @@ object Interpreter {
    * @param memory : une mémoire
    * @return la mémoire après l'interprétation de command
    */
-  // TODO TP2
   def interpreterCommand(command: Command, memory: Memory): Memory = {
     command match {
       case Nop => memory
@@ -154,7 +153,6 @@ object Interpreter {
    * @param memory : une mémoire
    * @return la mémoire après l'interprétation de la liste de commandes
    */
-  // TODO TP2 
   def interpreterCommands(commands: List[Command], memory: Memory): Memory = {
     commands match {
       case Nil => throw ExceptionListeVide
