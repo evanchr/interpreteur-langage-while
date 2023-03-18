@@ -43,8 +43,10 @@ object Interpreter {
    */
   def lookUp(v: Variable, mem: Memory): Value = {
     mem match {
-      case Nil => NlValue
-      case (Var(name1),valu) :: tl => v match { case Var(name2) => if (name1 == name2) valu else lookUp(v, tl) }
+      case Nil => NlValue // on renvoie la val nule si la variale n'existe pas dans la mémoire
+      case (vari,valu) :: tl => if (v == vari) valu else lookUp(v, tl)
+        // on compare les noms des vars et on renvoie sa valeur si il y a correspondance
+        // ou on continue de parcourir la mémoire sinon
     }
   }
 
@@ -56,12 +58,12 @@ object Interpreter {
    */
   def assign(v: Variable, d: Value, mem: Memory): Memory = {
     mem match {
-      case Nil => List((v,d))
-      case (Var(name1),valu) :: tl =>
-        v match {
-          case Var(name2) => if (name1 == name2) { (v,d) :: tl }
-                             else { (Var(name1),valu) :: assign(v,d,tl) }
-        } 
+      case Nil => List((v,d)) // si la memoire est vide, on rajoute un nouveau couple (var,val)
+      case (vari, valu) :: tl =>
+        if (v == vari) { (v,d) :: tl }
+          // s'il y a correspondance entre v et une variable dans la memoire, on renvoit un couple (v,d) suivi du reste de la memoire
+        else { (vari,valu) :: assign(v,d,tl) }
+          // sinon, on reprend le couple actuel et on continu la construction de la memoire en rappelant assign sur la suite de la memoire
     } 
   }
 
@@ -74,11 +76,12 @@ object Interpreter {
    * @return la valeur de l'expression
    */
   def interpreterExpr(expression: Expression, mem: Memory): Value = {
+    // ici, on prendra chaque class du trait Expression et on renverra la valeur qui lui correspond, parfois en operant
     expression match {
       case Nl => NlValue
       case Cst(name) => CstValue(name)
-      case VarExp(name) => val v: Variable = Var(name) ; lookUp(v,mem)
-      case Cons(arg1,arg2) => ConsValue(interpreterExpr(arg1,mem), interpreterExpr(arg2, mem))
+      case VarExp(name) => lookUp(Var(name),mem) // ici, il s'agit tout simplement de reutiliser la fonction lookUp
+      case Cons(arg1,arg2) => ConsValue(interpreterExpr(arg1,mem), interpreterExpr(arg2, mem)) // appel recursif sur les args en parametre
       case Hd(arg) => 
         interpreterExpr(arg, mem) match {
           case ConsValue(head, _) => head
@@ -91,7 +94,9 @@ object Interpreter {
         }
       case Eq(arg1,arg2) =>
         if (interpreterExpr(arg1, mem) != interpreterExpr(arg2, mem)) NlValue
+          // s'il n'y a pas correspondance, on renvoie la valeur nulle
         else ConsValue(NlValue,NlValue)
+          // s'il y a, on renvoit une "autre valeur", le cours nous disait que la valeur "Cons(nil,nil)" convenait par exemple
     }
   }
 
@@ -104,10 +109,12 @@ object Interpreter {
    * @return l'AST décrivant l'expression de cette valeur
    */
   def valueToExpression(value: Value): Expression = {
+    // on effectue l'operation inverse de la fonction precedente :
+    // pour chaque class du trait Value, on renvoit son expression correspondante
     value match {
       case NlValue => Nl
       case CstValue(name) => Cst(name)
-      case ConsValue(arg1, arg2) => Cons(valueToExpression(arg1),valueToExpression(arg2))
+      case ConsValue(arg1, arg2) => Cons(valueToExpression(arg1),valueToExpression(arg2)) // appel recursif sur les args en parametre
     }
   }
   
@@ -123,25 +130,32 @@ object Interpreter {
    * @return la mémoire après l'interprétation de command
    */
   def interpreterCommand(command: Command, memory: Memory): Memory = {
+    // on execute une commande sur la memoire, et on renvoit la memoire changee
+    // certaines commandes ont une liste de commandes en parametre, on utilisera interpreterCommands pour les executer
     command match {
-      case Nop => memory
-      case Set(v,e) => assign(v,interpreterExpr(e, memory), memory)
-      case While(cond,body) => 
+      case Nop => memory // pas de commande, donc pas de modification de memoire
+      case Set(v,e) => assign(v,interpreterExpr(e, memory), memory) // on reutilise assign pour modifier la valeur en memoire
+      case While(cond,body) =>
         interpreterExpr(cond, memory) match {
           case NlValue => memory
+            // si la cond a pour valeur nil, il n'y a pas/plus de modifications de memoire a faire
           case _ => interpreterCommand(While(cond,body), interpreterCommands(body, memory))
+            // on effectue les memes commandes jusqu'a ce la cond soit egale a nil
         }
-      case For(count,body) => 
+      case For(count,body) =>
         interpreterExpr(count, memory) match {
           case NlValue => memory
           case valu => interpreterCommand(For(Tl(valueToExpression(valu)),body), interpreterCommands(body, memory))
+            // on decremente la cond en prenant l'expression de droite de la valeur convertie en expression
+            // a part cela, le fonctionnement est similaire a While
         }
-      case If(cond,then_cmd,else_cmd) => {
+      case If(cond,then_cmd,else_cmd) =>
         interpreterExpr(cond, memory) match {
           case NlValue => interpreterCommands(else_cmd, memory)
+            // si le test d'egalite echoue, on execute les commandes "else"
           case _ => interpreterCommands(then_cmd, memory)
+            // sinon on execute les commandes "then"
         }
-      }
     }
   }
   
